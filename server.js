@@ -22,12 +22,19 @@ app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
+let fila = Promise.resolve();
+function umPorVez(fn) {
+  const run = fila.then(fn, fn);
+  fila = run.then(() => {}, () => {});
+  return run;
+}
+
 function validar(dados) {
   const need = ["empresa", "cliente", "curso", "checkout", "meet"];
   return need.filter((k) => !dados || !String(dados[k] || "").trim());
 }
 
-function runChrome(htmlPath, pngPath, width = 393, height = 852, scale = 3) {
+function runChrome(htmlPath, pngPath, width = 393, height = 852, scale = 2) {
   return new Promise((resolve, reject) => {
     const args = [
       "--headless=new",
@@ -48,7 +55,7 @@ function runChrome(htmlPath, pngPath, width = 393, height = 852, scale = 3) {
     const timer = setTimeout(() => {
       child.kill("SIGKILL");
       reject(new Error("timeout no Chromium"));
-    }, 40000);
+    }, 25000);
     child.on("close", (code) => {
       clearTimeout(timer);
       if (fs.existsSync(pngPath) && fs.statSync(pngPath).size > 1000) {
@@ -73,7 +80,7 @@ async function shotHtml(html, width, height, scale) {
 }
 
 async function shotScene(dados, scene) {
-  return shotHtml(renderHTML(dados, scene), 393, 852, 3);
+  return shotHtml(renderHTML(dados, scene), 393, 852, 2);
 }
 
 async function shotMeet(dados) {
@@ -81,7 +88,7 @@ async function shotMeet(dados) {
 }
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, chrome: CHROME });
+  res.json({ ok: true, chrome: CHROME, fotosLocais: process.env.FOTOS_LOCAIS === "1" });
 });
 
 async function montarDados(body) {
@@ -101,33 +108,35 @@ function nomesPrints() {
   return { iphone, win };
 }
 
-app.post("/api/gerar-print", async (req, res) => {
-  const dados = await montarDados(req.body || {});
-  if (!dados.cliente || !dados.checkout) {
-    return res.status(400).json({ error: "Mande rawText ou cliente + checkout" });
-  }
-  const scenes = buildScenes(dados);
-  const wanted = dados.cena || dados.scene || "01-interesse";
-  const scene = scenes.find((s) => s.id === wanted) || scenes[0];
-  try {
+app.post("/api/gerar-print", (req, res) => {
+  umPorVez(async () => {
+    console.log("pedido /api/gerar-print");
+    const dados = await montarDados(req.body || {});
+    if (!dados.cliente || !dados.checkout) {
+      return res.status(400).json({ error: "Mande rawText ou cliente + checkout" });
+    }
+    const scenes = buildScenes(dados);
+    const wanted = dados.cena || dados.scene || "01-interesse";
+    const scene = scenes.find((s) => s.id === wanted) || scenes[0];
     const buffer = await shotScene(dados, scene);
     res.set("Content-Type", "image/png");
     res.set("Content-Disposition", `inline; filename="${scene.id}.png"`);
     res.send(buffer);
-  } catch (err) {
+  }).catch((err) => {
     console.error(err);
-    res.status(500).json({ error: "Falha ao renderizar", detail: String(err.message || err) });
-  }
+    if (!res.headersSent) res.status(500).json({ error: "Falha ao renderizar", detail: String(err.message || err) });
+  });
 });
 
-app.post("/api/gerar-kit", async (req, res) => {
-  const dados = await montarDados(req.body || {});
-  if (!dados.cliente || !dados.checkout) {
-    return res.status(400).json({ error: "Mande rawText ou cliente + checkout" });
-  }
-  const scenes = buildScenes(dados);
-  const nomes = nomesPrints();
-  try {
+app.post("/api/gerar-kit", (req, res) => {
+  umPorVez(async () => {
+    console.log("pedido /api/gerar-kit");
+    const dados = await montarDados(req.body || {});
+    if (!dados.cliente || !dados.checkout) {
+      return res.status(400).json({ error: "Mande rawText ou cliente + checkout" });
+    }
+    const scenes = buildScenes(dados);
+    const nomes = nomesPrints();
     const prints = [];
     for (let i = 0; i < scenes.length; i++) {
       const scene = scenes[i];
@@ -148,6 +157,7 @@ app.post("/api/gerar-kit", async (req, res) => {
         image: `data:image/png;base64,${meetBuf.toString("base64")}`
       });
     } catch (meetErr) {
+      console.error(meetErr);
       prints.push({
         id: "05-meet-windows",
         label: "Meet Windows (falhou)",
@@ -155,6 +165,7 @@ app.post("/api/gerar-kit", async (req, res) => {
         error: String(meetErr.message || meetErr)
       });
     }
+    console.log("kit pronto", dados.cliente, "video", dados.meetVideo ? "sim" : "nao");
     res.json({
       ok: true,
       fonte: dados.fonte || "local",
@@ -167,10 +178,10 @@ app.post("/api/gerar-kit", async (req, res) => {
       erroImagem: dados.erroImagem || null,
       prints
     });
-  } catch (err) {
+  }).catch((err) => {
     console.error(err);
-    res.status(500).json({ error: "Falha ao renderizar o kit", detail: String(err.message || err) });
-  }
+    if (!res.headersSent) res.status(500).json({ error: "Falha ao renderizar o kit", detail: String(err.message || err) });
+  });
 });
 
 if (require.main === module) {
