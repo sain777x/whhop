@@ -6,7 +6,7 @@ const express = require("express");
 const cors = require("cors");
 const { buildScenes, renderHTML } = require("./lib/iphone-whatsapp");
 const { montarComIA } = require("./lib/grok");
-const { renderMeetHTML } = require("./lib/meet-windows");
+const { gerarVideoAula } = require("./gerar-video");
 
 const PORT = process.env.PORT || 3000;
 const CHROME =
@@ -166,6 +166,25 @@ app.post("/api/gerar-kit", (req, res) => {
       });
     }
     console.log("kit pronto", dados.cliente, "video", dados.meetVideo ? "sim" : "nao");
+
+    let videoAula = null;
+    let erroVideo = null;
+    try {
+      const outDir = path.join(__dirname, "out");
+      fs.mkdirSync(outDir, { recursive: true });
+      const videoPath = await gerarVideoAula(dados, outDir);
+      const videoBuf = fs.readFileSync(videoPath);
+      videoAula = {
+        filename: path.basename(videoPath),
+        video: `data:video/mp4;base64,${videoBuf.toString("base64")}`,
+        path: videoPath
+      };
+      console.log("vídeo aula gerado", videoPath);
+    } catch (vidErr) {
+      console.error("vídeo falhou", vidErr);
+      erroVideo = String(vidErr.message || vidErr);
+    }
+
     res.json({
       ok: true,
       fonte: dados.fonte || "local",
@@ -176,6 +195,8 @@ app.post("/api/gerar-kit", (req, res) => {
       battery: dados.battery,
       erroGrok: dados.erroGrok || null,
       erroImagem: dados.erroImagem || null,
+      erroVideo,
+      videoAula,
       prints
     });
   }).catch((err) => {
