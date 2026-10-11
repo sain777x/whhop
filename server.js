@@ -80,11 +80,11 @@ async function shotHtml(html, width, height, scale) {
 }
 
 async function shotScene(dados, scene) {
-  return shotHtml(renderHTML(dados, scene), 393, 852, 2);
+  return shotHtml(renderHTML(dados, scene), 393, 852, 1);
 }
 
 async function shotMeet(dados) {
-  return shotHtml(renderMeetHTML(dados), 1600, 900, 1);
+  return shotHtml(renderMeetHTML(dados), 1280, 720, 1);
 }
 
 app.get("/api/health", (_req, res) => {

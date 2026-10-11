@@ -67,12 +67,14 @@ HORARIO: 18:55</textarea>
         body: JSON.stringify(dados)
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "falha");
+      if (!res.ok) throw new Error(json.error || json.detail || "falha");
+      if (!json.prints || !json.prints.length) throw new Error("A API não devolveu prints");
       json.prints.forEach((p) => {
         const fig = document.createElement("figure");
-        fig.innerHTML = `<figcaption>${p.label}</figcaption>
-          <img src="${p.image}" alt="${p.id}">
-          <a href="${p.image}" download="${p.filename}">Baixar PNG</a>`;
+        const img = p.image
+          ? `<img src="${p.image}" alt="${p.id}"><a href="${p.image}" download="${p.filename}">Baixar PNG</a>`
+          : `<p>${p.error || "sem imagem"}</p>`;
+        fig.innerHTML = `<figcaption>${p.label}${json.fonte ? " · " + json.fonte : ""}</figcaption>${img}`;
         out.appendChild(fig);
       });
     } catch (err) {
