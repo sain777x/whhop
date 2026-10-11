@@ -157,7 +157,6 @@ app.post("/api/gerar-kit", (req, res) => {
         filename: nomes.win,
         image: `data:image/png;base64,${meetBuf.toString("base64")}`
       });
-      dados.meetScreenshot = `data:image/png;base64,${meetBuf.toString("base64")}`;
     } catch (meetErr) {
       console.error(meetErr);
       prints.push({
@@ -167,14 +166,13 @@ app.post("/api/gerar-kit", (req, res) => {
         error: String(meetErr.message || meetErr)
       });
     }
-    console.log("kit pronto", dados.cliente, "video", dados.meetVideo ? "sim" : "nao");
+    console.log("kit pronto", dados.cliente, "video", dados.hostAvatar ? "sim" : "nao");
 
     let videoAula = null;
     let erroVideo = null;
     try {
       const outDir = path.join(__dirname, "out");
       fs.mkdirSync(outDir, { recursive: true });
-      if (dados.meetScreenshot) dados.meetVideo = dados.meetScreenshot;
       const videoPath = await gerarVideoAula(dados, outDir);
       const stat = fs.statSync(videoPath);
       if (stat.size < 8 * 1024 * 1024) {
