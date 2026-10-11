@@ -174,13 +174,24 @@ app.post("/api/gerar-kit", (req, res) => {
       const outDir = path.join(__dirname, "out");
       fs.mkdirSync(outDir, { recursive: true });
       const videoPath = await gerarVideoAula(dados, outDir);
-      const videoBuf = fs.readFileSync(videoPath);
-      videoAula = {
-        filename: path.basename(videoPath),
-        video: `data:video/mp4;base64,${videoBuf.toString("base64")}`,
-        path: videoPath
-      };
-      console.log("vídeo aula gerado", videoPath);
+      const stat = fs.statSync(videoPath);
+      if (stat.size < 8 * 1024 * 1024) {
+        const videoBuf = fs.readFileSync(videoPath);
+        videoAula = {
+          filename: path.basename(videoPath),
+          video: `data:video/mp4;base64,${videoBuf.toString("base64")}`,
+          path: videoPath,
+          size: stat.size
+        };
+      } else {
+        videoAula = {
+          filename: path.basename(videoPath),
+          path: videoPath,
+          size: stat.size,
+          note: "vídeo grande demais para base64"
+        };
+      }
+      console.log("vídeo aula gerado", videoPath, stat.size);
     } catch (vidErr) {
       console.error("vídeo falhou", vidErr);
       erroVideo = String(vidErr.message || vidErr);
