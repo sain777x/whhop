@@ -6,7 +6,8 @@ const express = require("express");
 const cors = require("cors");
 const { buildScenes, renderHTML } = require("./lib/iphone-whatsapp");
 const { montarComIA } = require("./lib/grok");
-const { gerarVideoAula } = require("./gerar-video");
+const { renderMeetHTML } = require("./lib/meet-windows");
+const { gerarVideoAula } = require("./lib/gerar-video");
 
 const PORT = process.env.PORT || 3000;
 const CHROME =
