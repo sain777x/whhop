@@ -73,7 +73,10 @@ HORARIO: 18:55</textarea>
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dados)
       });
-      const json = await res.json();
+      const text = await res.text();
+      let json;
+      try { json = JSON.parse(text); }
+      catch (_) { throw new Error("Resposta não é JSON: " + text.slice(0, 180)); }
       if (!res.ok) throw new Error(json.error || json.detail || "falha");
       if (!json.prints || !json.prints.length) throw new Error("A API não devolveu prints");
       json.prints.forEach((p) => {
