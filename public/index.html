@@ -45,6 +45,13 @@ HORARIO: 18:55</textarea>
     <button type="submit">Gerar prints</button>
   </form>
   <div class="grid" id="out"></div>
+  <div id="video-box" style="margin-top:24px;display:none;background:#fff;padding:16px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.06)">
+    <h3 style="margin:0 0 10px;font-size:16px">Vídeo da aula (15s)</h3>
+    <video id="aula-video" controls style="max-width:100%;border-radius:10px;background:#000"></video>
+    <br>
+    <a id="baixar-video" download="aula-15s.mp4" style="display:inline-block;margin-top:10px;padding:8px 16px;background:#075e54;color:#fff;border-radius:8px;text-decoration:none;font-weight:700">Baixar vídeo</a>
+    <p id="video-erro" style="color:#c00;margin-top:8px;font-size:13px"></p>
+  </div>
   <p style="margin-top:28px;color:#4b5563;font-size:13px">cURL</p>
   <pre>curl -X POST http://localhost:3000/api/gerar-kit \
   -H 'Content-Type: application/json' \
@@ -77,6 +84,24 @@ HORARIO: 18:55</textarea>
         fig.innerHTML = `<figcaption>${p.label}${json.fonte ? " · " + json.fonte : ""}</figcaption>${img}`;
         out.appendChild(fig);
       });
+
+      const box = document.getElementById("video-box");
+      const vid = document.getElementById("aula-video");
+      const link = document.getElementById("baixar-video");
+      const erro = document.getElementById("video-erro");
+      if (json.videoAula && json.videoAula.video) {
+        vid.src = json.videoAula.video;
+        link.href = json.videoAula.video;
+        link.download = json.videoAula.filename || "aula-15s.mp4";
+        box.style.display = "block";
+        erro.textContent = "";
+      } else if (json.erroVideo) {
+        box.style.display = "block";
+        vid.removeAttribute("src");
+        erro.textContent = "Erro no vídeo: " + json.erroVideo;
+      } else {
+        box.style.display = "none";
+      }
     } catch (err) {
       alert("Erro: " + err.message);
     } finally {
