@@ -2,7 +2,6 @@ FROM node:20-bookworm-slim
 
 RUN apt-get update && apt-get install -y \
     chromium \
-    ffmpeg \
     fonts-liberation \
     libnss3 \
     libatk-bridge2.0-0 \

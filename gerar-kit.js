@@ -35,12 +35,6 @@ async function main() {
     fs.writeFileSync(file, buf);
     console.log("gerado", file, buf.length);
   }
-  try {
-    const videoPath = await gerarVideoAula(dados, outDir);
-    console.log("vídeo aula gerado", videoPath);
-  } catch (err) {
-    console.error("vídeo falhou", err.message || err);
-  }
 }
 
 main().catch((err) => {
