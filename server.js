@@ -7,7 +7,6 @@ const cors = require("cors");
 const { buildScenes, renderHTML } = require("./lib/iphone-whatsapp");
 const { montarComIA } = require("./lib/grok");
 const { renderMeetHTML } = require("./lib/meet-windows");
-const { gerarVideoAula } = require("./lib/gerar-video");
 
 const PORT = process.env.PORT || 3000;
 const CHROME =
@@ -166,37 +165,7 @@ app.post("/api/gerar-kit", (req, res) => {
         error: String(meetErr.message || meetErr)
       });
     }
-    console.log("kit pronto", dados.cliente, "video", dados.hostAvatar ? "sim" : "nao");
-
-    let videoAula = null;
-    let erroVideo = null;
-    try {
-      const outDir = path.join(__dirname, "out");
-      fs.mkdirSync(outDir, { recursive: true });
-      const videoPath = await gerarVideoAula(dados, outDir);
-      const stat = fs.statSync(videoPath);
-      if (stat.size < 8 * 1024 * 1024) {
-        const videoBuf = fs.readFileSync(videoPath);
-        videoAula = {
-          filename: path.basename(videoPath),
-          video: `data:video/mp4;base64,${videoBuf.toString("base64")}`,
-          path: videoPath,
-          size: stat.size
-        };
-      } else {
-        videoAula = {
-          filename: path.basename(videoPath),
-          path: videoPath,
-          size: stat.size,
-          note: "vídeo grande demais para base64"
-        };
-      }
-      console.log("vídeo aula gerado", videoPath, stat.size);
-    } catch (vidErr) {
-      console.error("vídeo falhou", vidErr);
-      erroVideo = String(vidErr.message || vidErr);
-    }
-
+    console.log("kit pronto", dados.cliente, "video", dados.meetVideo ? "sim" : "nao");
     res.json({
       ok: true,
       fonte: dados.fonte || "local",
@@ -207,8 +176,6 @@ app.post("/api/gerar-kit", (req, res) => {
       battery: dados.battery,
       erroGrok: dados.erroGrok || null,
       erroImagem: dados.erroImagem || null,
-      erroVideo,
-      videoAula,
       prints
     });
   }).catch((err) => {
