@@ -3,7 +3,6 @@ const path = require("path");
 const { shotScene } = require("./server");
 const { buildScenes } = require("./lib/iphone-whatsapp");
 const { montarComIA } = require("./lib/grok");
-const { gerarVideoAula } = require("./gerar-video");
 
 function rawFromEnv() {
   if (process.env.RAW) return process.env.RAW;
@@ -34,12 +33,6 @@ async function main() {
     const file = path.join(outDir, `${scene.id}.png`);
     fs.writeFileSync(file, buf);
     console.log("gerado", file, buf.length);
-  }
-  try {
-    const videoPath = await gerarVideoAula(dados, outDir);
-    console.log("vídeo aula gerado", videoPath);
-  } catch (err) {
-    console.error("vídeo falhou", err.message || err);
   }
 }
 
