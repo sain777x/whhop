@@ -184,7 +184,7 @@ app.post("/api/gerar-kit", (req, res) => {
   });
 });
 
-const { provaEntrega } = require("./lib/provas-entrega");
+const provaEntrega = require("./lib/provas-entrega");
 
 app.post("/api/prova-entrega", (req, res) => {
   umPorVez(async () => {
