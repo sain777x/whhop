@@ -84,7 +84,8 @@ async function shotScene(dados, scene) {
 }
 
 async function shotMeet(dados) {
-  return shotHtml(renderMeetHTML(dados), 1600, 900, 1);
+  const html = await renderMeetHTML(dados);
+  return shotHtml(html, 1600, 900, 1);
 }
 
 app.get("/api/health", (_req, res) => {
