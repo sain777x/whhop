@@ -125,8 +125,12 @@ app.post("/api/gerar-print", (req, res) => {
   umPorVez(async () => {
     console.log("pedido /api/gerar-print");
     const dados = await montarDados(req.body || {});
+    const rawStr = String((req.body && (req.body.rawText || req.body.texto || req.body.info)) || "");
     if (!dados.cliente || !dados.checkout) {
       return res.status(400).json({ error: "Mande rawText ou cliente + checkout" });
+    }    // Muro mínimo: sem DIA preenchido ou com placeholder <...> a prova nasce errada.
+    if (!String(dados.dia || "").trim() || /<[^>\n]{2,}>/.test(rawStr)) {
+      return res.status(400).json({ error: "rawText incompleto: preencha DIA/HORARIO e remova placeholders <...>" });
     }
     const scenes = buildScenes(dados);
     const wanted = dados.cena || dados.scene || "01-interesse";
@@ -145,8 +149,12 @@ app.post("/api/gerar-kit", (req, res) => {
   umPorVez(async () => {
     console.log("pedido /api/gerar-kit");
     const dados = await montarDados(req.body || {});
+    const rawStr = String((req.body && (req.body.rawText || req.body.texto || req.body.info)) || "");
     if (!dados.cliente || !dados.checkout) {
       return res.status(400).json({ error: "Mande rawText ou cliente + checkout" });
+    }    // Muro mínimo: sem DIA preenchido ou com placeholder <...> a prova nasce errada.
+    if (!String(dados.dia || "").trim() || /<[^>\n]{2,}>/.test(rawStr)) {
+      return res.status(400).json({ error: "rawText incompleto: preencha DIA/HORARIO e remova placeholders <...>" });
     }
     const scenes = buildScenes(dados);
     const nomes = nomesPrints(dados);
