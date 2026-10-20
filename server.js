@@ -184,19 +184,6 @@ app.post("/api/gerar-kit", (req, res) => {
   });
 });
 
-const provaEntrega = require("./lib/provas-entrega");
-
-app.post("/api/prova-entrega", (req, res) => {
-  umPorVez(async () => {
-    console.log("pedido /api/prova-entrega");
-    const out = await provaEntrega(req.body || {}, umPorVez);
-    res.json(out);
-  }).catch((err) => {
-    console.error(err);
-    if (!res.headersSent) res.status(500).json({ error: "Falha no kit de entrega", detail: String(err.message || err) });
-  });
-});
-
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`API em http://localhost:${PORT}`);
