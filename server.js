@@ -99,12 +99,25 @@ function pad(n) {
   return String(n).padStart(2, "0");
 }
 
-function nomesPrints() {
+function nomesPrints(dados) {
   const agora = new Date();
   const baseImg = 1000 + Math.floor(Math.random() * 8000);
   const iphone = [0, 1, 2, 3].map((i) => `IMG_${String(baseImg + i).padStart(4, "0")}.PNG`);
-  const t = new Date(agora.getTime() + 8000);
-  const win = `Captura de tela ${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())} ${pad(t.getHours())}${pad(t.getMinutes())}${pad(t.getSeconds())}.png`;
+  // A captura do Meet usa a data e o relógio DA SESSÃO (DIA + statusBar),
+  // não o momento em que a imagem é gerada — metadado que denuncia edição posterior.
+  let t = new Date(agora.getTime() + 8000);
+  let hms = "";
+  const m = String((dados && dados.dia) || "").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) {
+    const sb = String((dados && dados.statusBar) || "").match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+    const hm = sb
+      ? [sb[1], sb[2]]
+      : String((dados && dados.horario) || "18:55").split(":").map((x) => String(parseInt(x, 10) || 0).padStart(2, "0"));
+    const ss = String(10 + Math.floor(Math.random() * 40)).padStart(2, "0");
+    hms = `${hm[0]}${hm[1]}${ss}`;
+    t = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), 12, 0, 0, 0);
+  }
+  const win = `Captura de tela ${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())} ${hms || `${pad(t.getHours())}${pad(t.getMinutes())}${pad(t.getSeconds())}`}.png`;
   return { iphone, win };
 }
 
@@ -136,7 +149,7 @@ app.post("/api/gerar-kit", (req, res) => {
       return res.status(400).json({ error: "Mande rawText ou cliente + checkout" });
     }
     const scenes = buildScenes(dados);
-    const nomes = nomesPrints();
+    const nomes = nomesPrints(dados);
     const prints = [];
     for (let i = 0; i < scenes.length; i++) {
       const scene = scenes[i];

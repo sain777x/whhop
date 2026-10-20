@@ -15,6 +15,7 @@ function rawFromEnv() {
     `APRESENTADOR: ${process.env.APRESENTADOR || process.env.EMPRESA || "Host"}`,
     `PRODUTO: ${process.env.PRODUTO || process.env.CURSO || "Mentorship"}`,
     `DETALHES DO PRODUTO: ${process.env.DETALHES || "N/A"}`,
+    `ARQUIVO: ${process.env.ARQUIVO || ""}`,
     `link: ${process.env.CHECKOUT || "https://whop.com/checkout/plan_yUcOnHccHp7BK"}`,
     `Status: APPROVED`,
     `DIA: ${process.env.DIA || ""}`,
